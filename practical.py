@@ -10,10 +10,12 @@ class Practical(QWidget):
     note_on_signal = pyqtSignal(int, str)
     note_off_signal = pyqtSignal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, shared_data_manager=None):
         super().__init__(parent)
+        self.shared_data_manager = shared_data_manager  # Store the shared data manager instance
         self.pixmap_item = {}
 
+        # Load theory from pickle file
         self.load_theory()
 
         # Setup the GUI
@@ -167,4 +169,9 @@ class Practical(QWidget):
         note_handler(self, message)  # Pass self (Practical instance) and the MIDI message
 
     def go_button_clicked(self):
+        """Handle 'Go' button click event"""
         print("Go button clicked")
+
+        # Example: Save some data to shared_data_manager when the button is clicked
+        self.shared_data_manager.shared_data["example_key"] = "example_value"
+        self.shared_data_manager.save_data(self.shared_data_manager.shared_data)

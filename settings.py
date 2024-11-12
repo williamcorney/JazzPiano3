@@ -1,10 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit
+# settings.py
 
 class Settings(QWidget):
-    def __init__(self, main_window):
+    def __init__(self, main_window, shared_data_manager):
         super().__init__(main_window)
         self.main_window = main_window  # Access main window
-
+        self.shared_data_manager = shared_data_manager  # Access shared_data_manager directly
         self.layout = QVBoxLayout(self)
 
         # Create a label to display the current value of the specified key
@@ -37,7 +38,7 @@ class Settings(QWidget):
         self.layout.addWidget(self.delete_button)
 
         # Connect the signal to update the label when shared data changes
-        self.main_window.shared_data_manager.data_updated.connect(self.update_label)
+        self.shared_data_manager.data_updated.connect(self.update_label)  # Listen to data_updated signal
 
         # Set the layout
         self.setLayout(self.layout)
@@ -64,20 +65,21 @@ class Settings(QWidget):
         # Get the key from the QLineEdit and delete it from shared data
         key = self.key_input.text()
 
-        if key in self.main_window.shared_data:
-            del self.main_window.shared_data[key]  # Delete the key from the dictionary
-            self.main_window.shared_data = self.main_window.shared_data  # Trigger update
+        if key in self.shared_data_manager.shared_data:  # Access shared data via shared_data_manager
+            del self.shared_data_manager.shared_data[key]  # Delete the key from the dictionary
+            self.shared_data_manager.trigger_data_update()  # Trigger update
             self.testkey_label.setText(f"Key '{key}' deleted.")
         else:
             self.testkey_label.setText(f"Key '{key}' not found.")
 
     def set_value(self, key, value):
-        data = self.main_window.shared_data
+        data = self.shared_data_manager.shared_data  # Access shared data via shared_data_manager
         data[key] = value
-        self.main_window.shared_data = data  # This triggers data_updated signal
+        self.shared_data_manager.trigger_data_update()  # Trigger update
+        self.shared_data_manager.shared_data = data  # This triggers data_updated signal
 
     def get_value(self, key):
-        return self.main_window.shared_data.get(key)
+        return self.shared_data_manager.shared_data.get(key)  # Access shared data via shared_data_manager
 
     def update_label(self, updated_data):
         # Update label when shared data is updated
