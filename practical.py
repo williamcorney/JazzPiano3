@@ -14,7 +14,20 @@ class Practical(QWidget):
         super().__init__(parent)
         self.pixmap_item = {}
 
-        # Initialize Theory from pickle file
+        self.load_theory()
+
+        # Setup the GUI
+        self.setup_layout()
+        self.setup_theory_lists()
+        self.setup_piano_keys_view()
+        self.setup_labels()
+        self.setup_go_button()
+
+        # Connect signals to methods
+        self.connect_signals()
+
+    def load_theory(self):
+        """Load theory from pickle file"""
         try:
             with open('theory.pkl', 'rb') as file:
                 self.Theory = pickle.load(file)
@@ -23,21 +36,17 @@ class Practical(QWidget):
             self.Theory = {}  # Default empty dictionary if file is not found
             print("Theory file not found. Using default.")
 
-        # Create layout and widget for Practical Tab
+    def setup_layout(self):
+        """Setup the main layout for the Practical tab"""
         self.layout = QVBoxLayout(self)
         self.label = QLabel("This is the Practical tab.")
         self.layout.addWidget(self.label)
 
-        # Button to print shared data (from Oralia)
-        self.print_data_button = QPushButton("Print Shared Data")
-        self.print_data_button.clicked.connect(self.print_shared_data)
-        self.layout.addWidget(self.print_data_button)
-
-        # Set up the list widgets for theory display
         self.horizontal = QHBoxLayout()
         self.layout.addLayout(self.horizontal)
 
-        # Creating QListWidgets for different theories
+    def setup_theory_lists(self):
+        """Setup the theory list widgets and populate them"""
         self.theory1, self.theory2, self.theory3 = QListWidget(), QListWidget(), QListWidget()
         for theory in [self.theory1, self.theory2, self.theory3]:
             self.horizontal.addWidget(theory, stretch=1)
@@ -45,7 +54,8 @@ class Practical(QWidget):
         self.theory1.addItems(["Notes", "Scales", "Triads", "Sevenths", "Modes", "Shells"])
         self.theory2.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
 
-        # Set up QGraphicsScene for displaying piano keys
+    def setup_piano_keys_view(self):
+        """Setup the QGraphicsView for piano keys"""
         self.Scene = QGraphicsScene()
         self.BackgroundPixmap = QPixmap(
             "/Users/williamcorney/PycharmProjects/JazzPiano2/Practical/Images/Piano/keys.png")
@@ -59,15 +69,11 @@ class Practical(QWidget):
         self.View.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.layout.addWidget(self.View)
 
-        # Connect signals to methods
-        self.note_on_signal.connect(self.insert_note)
-        self.note_off_signal.connect(self.delete_note)
-
-        # Set up the additional labels in the layout
+    def setup_labels(self):
+        """Setup the labels on the GUI"""
         self.horizontal_vertical = QVBoxLayout()
         self.horizontal.addLayout(self.horizontal_vertical, 2)
 
-        # Create the labels with relevant text
         # Create the labels with relevant text
         self.labels = {}
         for key, text in [('key_label', 'Key: C Major'),
@@ -80,35 +86,63 @@ class Practical(QWidget):
             self.labels[key] = label
             self.horizontal_vertical.addWidget(label)
 
-        # Add the "Go" button below the score label
+    def setup_go_button(self):
+        """Setup the 'Go' button"""
         self.go_button = QPushButton("Go")
         self.go_button.clicked.connect(self.go_button_clicked)
         self.horizontal_vertical.addWidget(self.go_button)
 
-    def handle_midi_message(self, message):
-        """
-        This method will be passed as a callback to mido, which will in turn
-        call note_handler with the Practical instance and the message.
-        """
-        note_handler(self, message)  # Pass self (Practical instance) and the MIDI message
+    def connect_signals(self):
+        """Connect the signals to their respective handlers"""
+        self.note_on_signal.connect(self.insert_note)
+        self.note_off_signal.connect(self.delete_note)
 
-    def get_shared_data(self):
-        """
-        Returns the shared data as a dictionary from the main window (Oralia).
-        """
-        main_window = self.window()  # Access Oralia window to get shared data
-        return main_window.shared_data  # Access shared data from Oralia
+        # Connect the theory list widgets to their respective methods
+        self.theory1.itemClicked.connect(self.theory1_clicked)
+        self.theory2.itemClicked.connect(self.theory2_clicked)
+        self.theory3.itemClicked.connect(self.theory3_clicked)
 
-    def print_shared_data(self):
-        """
-        Calls get_shared_data and prints the result to the console.
-        """
-        shared_data = self.get_shared_data()
-        print("Shared Data:", shared_data)  # Print shared data to the console
+    def theory1_clicked(self):
+        self.labels['score_value'].setText("")
+        self.labels['fingering_label'].clear()
+        self.labels['key_label'].setText("")
 
-    def go_button_clicked(self):
-        # Define what happens when the Go button is clicked
-        print("Go button clicked")
+        self.theory2.clear()
+        self.theory3.clear()
+        self.theorymode = self.theory1.selectedItems()[0].text()
+
+        theory_items = {
+            "Notes": ["Naturals", "Sharps", "Flats"],
+            "Scales": ["Major", "Minor", "Harmonic Minor", "Melodic Minor"],
+            "Triads": ["Major", "Minor"],
+            "Sevenths": ["Maj7", "Min7", "7", "Dim7", "m7f5"],
+            "Modes": ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"],
+            "Shells": ["Major", "Minor", "Dominant"]
+        }
+
+        if self.theorymode in theory_items:
+            self.theory2.addItems(theory_items[self.theorymode])
+
+    def theory2_clicked(self):
+        self.theory3.clear()
+        self.theory2list = [item.text() for item in self.theory2.selectedItems()]
+
+        theory3_items = {
+            "Notes": [],
+            "Scales": ["Right", "Left"],
+            "Triads": ["Root", "First", "Second"],
+            "Sevenths": ["Root", "First", "Second", "Third"],
+            "Modes": [],
+            "Shells": ["3/7", "7/3"]
+        }
+
+        if self.theorymode in theory3_items:
+            self.theory3.addItems(theory3_items[self.theorymode])
+
+    def theory3_clicked(self):
+        modes_requiring_list = {"Notes", "Scales", "Triads", "Sevenths", "Shells"}
+        if self.theorymode in modes_requiring_list:
+            self.theory3list = [item.text() for item in self.theory3.selectedItems()]
 
     def insert_note(self, note, color):
         """
@@ -128,3 +162,9 @@ class Practical(QWidget):
             if self.pixmap_item[note].scene():
                 self.pixmap_item[note].scene().removeItem(self.pixmap_item[note])
             del self.pixmap_item[note]
+
+    def handle_midi_message(self, message):
+        note_handler(self, message)  # Pass self (Practical instance) and the MIDI message
+
+    def go_button_clicked(self):
+        print("Go button clicked")
