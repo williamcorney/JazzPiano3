@@ -19,8 +19,7 @@ def note_handler(tab_instance, message):
         note_name = midi_note_to_name(message.note)
 
         # Update the inversion label with the released note (or reset to a default value)
-        tab_instance.labels['inversion_label'].setText(f"Inversion: {note_name} released")
-        print(f"Note Off: {message.note} ({note_name})")
+
 
         # Emit the note_off_signal to indicate that a note has been released
         tab_instance.note_off_signal.emit(message.note)  # Emit note_off_signal to handle note release

@@ -1,10 +1,9 @@
-import pickle
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QListWidget, \
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QListWidget, \
     QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QAbstractItemView
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QPixmap, QFont
 from note_handler import note_handler  # Importing the note_handler function
-
+import pickle
 
 class Practical(QWidget):
     # Define custom signals for note on/off
@@ -69,6 +68,7 @@ class Practical(QWidget):
         self.horizontal.addLayout(self.horizontal_vertical, 2)
 
         # Create the labels with relevant text
+        # Create the labels with relevant text
         self.labels = {}
         for key, text in [('key_label', 'Key: C Major'),
                           ('inversion_label', 'Inversion: Root'),
@@ -80,8 +80,12 @@ class Practical(QWidget):
             self.labels[key] = label
             self.horizontal_vertical.addWidget(label)
 
-    def handle_midi_message(self, message):
+        # Add the "Go" button below the score label
+        self.go_button = QPushButton("Go")
+        self.go_button.clicked.connect(self.go_button_clicked)
+        self.horizontal_vertical.addWidget(self.go_button)
 
+    def handle_midi_message(self, message):
         """
         This method will be passed as a callback to mido, which will in turn
         call note_handler with the Practical instance and the message.
@@ -101,6 +105,10 @@ class Practical(QWidget):
         """
         shared_data = self.get_shared_data()
         print("Shared Data:", shared_data)  # Print shared data to the console
+
+    def go_button_clicked(self):
+        # Define what happens when the Go button is clicked
+        print("Go button clicked")
 
     def insert_note(self, note, color):
         """

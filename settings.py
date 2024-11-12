@@ -37,10 +37,10 @@ class Settings(QWidget):
         self.layout.addWidget(self.delete_button)
 
         # Connect the signal to update the label when shared data changes
-        self.main_window.data_updated.connect(self.update_label)
+        self.main_window.shared_data_manager.data_updated.connect(self.update_label)
 
+        # Set the layout
         self.setLayout(self.layout)
-        self.update_label(self.main_window.shared_data)  # Update label on initialization
 
     def set_value_for_key(self):
         # Get the key and value from the QLineEdits
@@ -74,16 +74,16 @@ class Settings(QWidget):
     def set_value(self, key, value):
         data = self.main_window.shared_data
         data[key] = value
-        self.main_window.shared_data = data
+        self.main_window.shared_data = data  # This triggers data_updated signal
 
     def get_value(self, key):
         return self.main_window.shared_data.get(key)
 
-    def update_label(self, value):
-        # This method will update the label with the value for the current key, if any
+    def update_label(self, updated_data):
+        # Update label when shared data is updated
         key = self.key_input.text()
-        test_value = value.get(key) if key else None
-        if test_value is not None:
-            self.testkey_label.setText(f"Current value for '{key}': {test_value}")
+        value = updated_data.get(key) if key else None
+        if value is not None:
+            self.testkey_label.setText(f"Current value for '{key}': {value}")
         else:
             self.testkey_label.setText(f"No value found for '{key}'")
