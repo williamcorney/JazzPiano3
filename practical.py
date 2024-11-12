@@ -3,7 +3,9 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayo
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QPixmap, QFont
 from note_handler import note_handler  # Importing the note_handler function
+from theory_handler import handle_theory_action  # Import the function from theory_handler
 import pickle
+
 
 class Practical(QWidget):
     # Define custom signals for note on/off
@@ -12,10 +14,9 @@ class Practical(QWidget):
 
     def __init__(self, parent=None, shared_data_manager=None):
         super().__init__(parent)
-        self.shared_data_manager = shared_data_manager  # Store the shared data manager instance
+        self.shared_data_manager = shared_data_manager  # Store the shared data manager
         self.pixmap_item = {}
 
-        # Load theory from pickle file
         self.load_theory()
 
         # Setup the GUI
@@ -152,7 +153,8 @@ class Practical(QWidget):
         """
         self.xcord = self.Theory["NoteCoordinates"][note % 12] + ((note // 12) - 4) * 239
         self.pixmap_item[note] = QGraphicsPixmapItem(
-            QPixmap("/Users/williamcorney/PycharmProjects/JazzPiano2/Practical/Images/Piano/key_" + color + self.Theory["NoteFilenames"][note % 12]))
+            QPixmap("/Users/williamcorney/PycharmProjects/JazzPiano2/Practical/Images/Piano/key_" + color +
+                    self.Theory["NoteFilenames"][note % 12]))
         self.pixmap_item[note].setPos(self.xcord, 0)
         current_scene = self.pixmap_item[note].scene()
         if current_scene:
@@ -169,9 +171,10 @@ class Practical(QWidget):
         note_handler(self, message)  # Pass self (Practical instance) and the MIDI message
 
     def go_button_clicked(self):
-        """Handle 'Go' button click event"""
-        print("Go button clicked")
-
-        # Example: Save some data to shared_data_manager when the button is clicked
-        self.shared_data_manager.shared_data["example_key"] = "example_value"
-        self.shared_data_manager.save_data(self.shared_data_manager.shared_data)
+        """Handle the action when the Go button is clicked"""
+        selected_items = [item.text() for item in self.theory2.selectedItems()]
+        self.theorymode = "Scales"
+        if self.theorymode:
+            # Call the function from theory_handler and pass the shared data manager
+            result = handle_theory_action(self.theorymode, selected_items, self.shared_data_manager)
+            print(result)  # Print or update UI based on result
